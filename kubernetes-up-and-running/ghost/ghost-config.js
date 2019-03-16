@@ -5,9 +5,13 @@ config = {
   development: {
     url: 'http://localhost:2368',
     database: {
-      client: 'sqlite3',
+      client: 'mysql',
       connection: {
-        filename: path.join(process.env.GHOST_CONTENT, '/data/ghost-dev.db')
+        host: 'mysql',
+        user: 'root',
+        password: 'root',
+        database: 'ghost_db',
+        charset: 'utf8'
       },
       debug: false
     },
