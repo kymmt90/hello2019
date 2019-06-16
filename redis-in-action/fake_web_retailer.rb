@@ -1,6 +1,11 @@
 require 'redis'
+require 'securerandom'
 
-module FakeWebRetailer
+class FakeWebRetailer
+  def initialize(token:, user:)
+    connection.hset('login:', token, user)
+  end
+
   def check_token(token)
     connection.hget('login:', token)
   end
@@ -9,34 +14,41 @@ module FakeWebRetailer
     timestamp = Time.now.to_f
 
     connection.hset('login:', token, user)
-    connection.zadd('recent:', token, timestamp)
+    connection.zadd('recent:', timestamp, token)
 
     if item
       key = "viewed:#{token}"
-      connection.zadd(key, item, timestamp)
+      connection.zadd(key, timestamp, item)
       connection.zremrangebyrank(key, 0, -26)
     end
   end
 
-  def clean_sessions
+  def clean_full_sessions(force: false)
     size = connection.zcard('recent:')
-    if size <= LIMIT
-      sleep 1
-      continue
-    end
 
-    limit = 10000000
-    end_index = [size - limit, 100].min
-    tokens = connection.zrange('recent:', 0, end_index - 1)
-    session_keys = []
+    tokens = if force
+              connection.zrange('recent:', 0, -1)
+            else
+              limit = 10000000
+              end_index = [size - limit, 100].min
+              connection.zrange('recent:', 0, end_index - 1)
+            end
 
-    tokens.each do |token|
-      session_keys << "viewed:#{token}"
-    end
+    return if tokens.empty?
+
+    session_keys = tokens.map { |token| ["viewed:#{token}", "cart:#{token}"] }.flatten
+
     connection.del(*session_keys)
-
     connection.hdel('login:', *tokens)
-    connection.zrem('recent:', *tokens)
+    connection.zrem('recent:', tokens)
+  end
+
+  def add_to_cart(session, item, count)
+    if count <= 0
+      connection.hdel("cart:#{session}", item)
+    else
+      connection.hset("cart:#{session}", item, count)
+    end
   end
 
   private
@@ -45,3 +57,10 @@ module FakeWebRetailer
     @redis ||= Redis.new(host: 'localhost', port: 6379)
   end
 end
+
+pp token = SecureRandom.urlsafe_base64
+retailer = FakeWebRetailer.new(token: token, user: 'kymmt90')
+pp user = retailer.check_token(token)
+pp retailer.update_token(token, user)
+pp retailer.add_to_cart(token, 'apple', 5)
+pp retailer.clean_full_sessions(force: false)
