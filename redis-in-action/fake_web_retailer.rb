@@ -51,6 +51,20 @@ class FakeWebRetailer
     end
   end
 
+  def cache_request(request, &callback)
+    page_key = "cache:#{request.hash}"
+
+    content = connection.get(page_key)
+
+    return content if content
+
+    content = callback.call(request)
+
+    connection.setex(page_key, 300, content)
+
+    content
+  end
+
   private
 
   def connection
