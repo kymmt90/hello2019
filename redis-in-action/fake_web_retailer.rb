@@ -65,6 +65,34 @@ class FakeWebRetailer
     content
   end
 
+  def schedule_row_cache(row_id, delay)
+    connection.zadd('delay:', delay, row_id)
+    connection.zadd('schedule:', Time.now.to_f, row_id)
+  end
+
+  def cache_rows
+    next_to_cache = connection.zrange('schedule:', 0, 0, with_scores: true)
+
+    now = Time.now.to_f
+
+    if !next_to_cache || next_to_cache[0][1] > now
+      sleep 0.05
+    end
+
+    row_id = next_to_cache[0][0]
+
+    delay = connection.zscore('delay:', row_id)
+    if delay <= 0
+      connection.zrem('delay:', row_id)
+      connection.zrem('schedule:', row_id)
+      connection.del("inv:#{row_id}")
+    end
+
+    row = { product: 'product 1' }
+    connection.zadd('schedule:', now + delay, row_id)
+    connection.set("inv:#{row_id}", row.to_json)
+  end
+
   private
 
   def connection
