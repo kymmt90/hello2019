@@ -20,6 +20,7 @@ class FakeWebRetailer
       key = "viewed:#{token}"
       connection.zadd(key, timestamp, item)
       connection.zremrangebyrank(key, 0, -26)
+      connection.zincrby('viewed:', -1, item)
     end
   end
 
@@ -91,6 +92,19 @@ class FakeWebRetailer
     row = { product: 'product 1' }
     connection.zadd('schedule:', now + delay, row_id)
     connection.set("inv:#{row_id}", row.to_json)
+  end
+
+  def rescale_viewed
+    connection.zremrangebyrank('viewed:', 20000, -1)
+    connection.zinterstore('viewed:', ['viewed:'], weights: [0.5])
+  end
+
+  def can_cache(request)
+    item_id = request.item_id
+
+    rank = connection.zrank('viewed:', item_id)
+
+    !rank.nil? && rank < 10000
   end
 
   private
