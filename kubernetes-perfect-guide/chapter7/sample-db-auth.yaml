@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  password: LFhqfK/5QQDUxQfmNupmRhqu3jFMD1yFXs78jhkwnO0SUZg4ygQW4oDcsg1jlpg1.899CUdHVf7yO/NMf.Iu6fFiMPyxKL5n//j8TL2w==
+  username: 30Gd6FNwPSWsTm04eCAa1bFSWQwI35MVWfuEITonlG6Hc74ZMUMut5j65p5u/PQT.4Ur6T0kyIuy4TxR0.WyIP6pOVP5ZJ+OK2+uT/UQ==
+kind: Secret
+metadata:
+  name: sample-db-auth
+type: Opaque
+# kubesec:v:3
+# kubesec:gcp:projects/graphic-abbey-248112/locations/global/keyRings/sample-keyring/cryptoKeys/kubesec-key:CiQA9zcm3FCD5/44zcdomE3/mFbcQ5kC7ZMbUGBCePJY7la1xZASSQB5XEEk0XJ6DffZBSm/fB92QFFNVEv9qHGuxw+vDoG6RlBYcYbJ7DAzPd2tqP0axCnu6z//0aJ479YbMQvwtCIChH0fXGIq/TI=
+# kubesec:mac:dkEl/Lq+tWAw+h43.KDlWhvr/wb5bvoSorz0s9g==
